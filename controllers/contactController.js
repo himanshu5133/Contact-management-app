@@ -2,16 +2,16 @@ const asyncHandler = require("express-async-handler") // we will not need to wri
 const Contact = require("../models/contactModel");
 //@desc Get all contacts
 //@route GET /api/contacts
-//@access public
+//@access private
 const getContacts = async (req, res) => {
-    const contacs = await Contact.find();
+    const contacs = await Contact.find({user_id: req.user.id});
     res.status(200).json(contacs);
 };
 
 
 //@desc create contact
 //@route POST /api/contacts 
-//@access public
+//@access private
 const createContact = asyncHandler(async (req, res) => {
     console.log(req.body);
     const { name, email, phone } = req.body;
@@ -23,13 +23,14 @@ const createContact = asyncHandler(async (req, res) => {
         name,
         email,
         phone,
+        user_id: req.user.id,
     });
     res.status(201).json(contact);
 });
 
 //@desc get contact by id
 //@route GET /api/contacts/id
-//@access public
+//@access private
 const getContact = asyncHandler(async (req, res) => {
     const id = req.params.id;
     const contact = await Contact.findById(id);
@@ -42,7 +43,7 @@ const getContact = asyncHandler(async (req, res) => {
 
 //@desc update contact
 //@route PUT /api/contacts/id
-//@access public
+//@access private
 const updateContact = asyncHandler(async (req, res) => {
     const id = req.params.id;
     const contact = await Contact.findById(id);
@@ -54,6 +55,10 @@ const updateContact = asyncHandler(async (req, res) => {
     //     { _id: id }, 
     //     { $set: { name: req.body.name, email: req.body.email, phone: req.body.phone } }
     // ); this is also working but writing another block of code
+    if(contact.user_id.toString()!=req.user.id){
+        res.statusCode(401);
+        throw new Error("User don't have permission to update this contact");
+    }
     const result = await Contact.updateOne(
         {_id:id},
         req.body,
@@ -64,13 +69,17 @@ const updateContact = asyncHandler(async (req, res) => {
 
 //@desc delete contact
 //@route DELETE /api/contacts
-//@access public
+//@access private
 const deleteContact = asyncHandler(async (req, res) => {
     const id = req.params.id;
     const contact = await Contact.findById(id);
     if(!contact){
         res.status(404);
         throw new Error("Contact not found");
+    }
+    if(contact.user_id.toString()!=req.user.id){
+        res.statusCode(401);
+        throw new Error("User don't have permission to delete this contact");
     }
     let result = await Contact.deleteOne({_id:id},{new:true});
     if(result.ackknowledged){
