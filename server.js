@@ -1,7 +1,7 @@
 //creating express server 
 const express = require("express");
 const errorHandler = require("./middleware/errorHandler");
-const { connectDb } = require("./conifg/dbConnection");
+const { connectDb } = require("./config/dbConnection");
 const dotenv = require("dotenv").config();
 
 connectDb();

@@ -37,13 +37,18 @@ const registerUser = asyncHandler(async (req, res) => {
 
 //@desc Login user
 //@route post /api/users/login
-//@access public
+//@access private
 const loginUser = asyncHandler(async (req, res) => {
     console.log(req.body);
     const { email, password } = req.body;
     if (!email || !password) {
         res.status(400);
-        throw new Error("All fields are mandatory");
+        if(!email){
+            throw new Error("Please Enter email!");
+        }
+        else{
+            throw new Error("Please enter password!");
+        }
     }
     const user = await User.findOne({ email });
     //compare password and hashedpassword
@@ -56,7 +61,7 @@ const loginUser = asyncHandler(async (req, res) => {
             },
         }, 
         process.env.ACCESS_TOKEN_SECRET, 
-        { expiresIn: "10m" },
+        { expiresIn: "15m" },
         );
         res.status(200).json({accessToken});
 
@@ -70,12 +75,6 @@ const loginUser = asyncHandler(async (req, res) => {
 //@route GET /api/users/current
 //@access private
 const currentUser = asyncHandler(async (req, res) => {
-    console.log(req.body);
-    const { username, password } = req.body;
-    if (!username || !password) {
-        res.status(400);
-        throw new Error("All fields are mandatory");
-    }
     res.json(req.user);
 })
 module.exports = { registerUser, loginUser, currentUser };
